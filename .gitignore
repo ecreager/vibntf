@@ -1,0 +1,13 @@
+.idea/
+*.xml
+*.pyc
+*.lprof
+*.DS_STORE
+*.aux
+*.dvi
+*.log
+*.blg
+*.bbl
+*.nav
+*.synctex.gz
+*.toc
