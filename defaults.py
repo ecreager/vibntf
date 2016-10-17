@@ -13,8 +13,9 @@ R = 50
 
 # ntf
 S = 2
-Z = 5
-EM_ITER = 10
+Z = 3
+# EM_ITER = 100
+EM_ITER = 5
 
 # synth
 FS = 44100. # music
@@ -24,7 +25,7 @@ RATE = 10.
 DEPTH = F0/20.
 PHASE_INIT = 0
 FM_PHASE_INIT = -numpy.pi/2
-N_PARTIALS = 5
+N_PARTIALS = 5  # default argument to fm_square_wave (randomized during experiment)
 SIG_LEN = int(SIG_DUR*FS)
 SOME_NOTES = True
 # value range of random params for vibrato square wave
@@ -52,3 +53,7 @@ SAVE_COMPARE = True
 ALGS = ['nmf', 'vibntf']  # default comparison in a synthetic data experiment
 N_SEPARATIONS = 1
 VIBNTF_DIR = '/tmp/vibntf'  # where to store data
+
+STORE_GAINS = False
+SAVE_FACTORS = False
+NEW_UPDATES = True

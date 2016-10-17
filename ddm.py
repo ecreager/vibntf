@@ -54,7 +54,7 @@ def stddm(x, Q=None, L=None, N=None, M=None, fs=None, hop=None, do_print=default
             Aft[f, t, :, :] = sigPolyWinFfts[t, xrange(f - 1 - (L - 1) / 2, f + (L - 1) / 2), :]
             bft[f, t, :, :] = sigWinDInnerProds[t, xrange(f - 1 - (L - 1) / 2, f + (L - 1) / 2), :]
     AHft = numpy.transpose(Aft, axes=(0, 1, 3, 2)).conj()
-    AHAinv = FT22inv(numpy.sum(Aft[:, :, None, :, :] * AHft[:, :, :, :, None], axis=3))
+    AHAinv = fast2x2inv(numpy.sum(Aft[:, :, None, :, :] * AHft[:, :, :, :, None], axis=3))
     AHb = numpy.sum(AHft[:, :, :, :, None] * bft[:, :, None, :, :], axis=3)
     eta = numpy.sum(AHAinv[:, :, :, :, None] * AHb[:, :, None, :, :], axis=3).squeeze()
     st_freqs = numpy.imag(eta[:, :, 0] / (2 * numpy.pi))
@@ -62,9 +62,9 @@ def stddm(x, Q=None, L=None, N=None, M=None, fs=None, hop=None, do_print=default
     return st_freqs, st_freqs_der, X, x_bufs
 
 
-def FT22inv(T):
-    Z = numpy.asarray([[T[:, :, 1, 1], -T[:, :, 0, 1]], [-T[:, :, 1, 0], T[:, :, 0, 0]]]) / (
-        T[:, :, 1, 1] * T[:, :, 0, 0] - T[:, :, 0, 1] * T[:, :, 1, 0])
+def fast2x2inv(A):  # quickly invert the 2x2 matrix A
+    Z = numpy.asarray([[A[:, :, 1, 1], -A[:, :, 0, 1]], [-A[:, :, 1, 0], A[:, :, 0, 0]]]) / (
+        A[:, :, 1, 1] * A[:, :, 0, 0] - A[:, :, 0, 1] * A[:, :, 1, 0])
     return numpy.transpose(Z, axes=(2, 3, 0, 1))
 
 
