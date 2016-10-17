@@ -18,7 +18,7 @@ ALL_NOTES = ['A0','A#0','B0',\
     'C8','C#8','D8','D#8','E8','F8','F#8','G8','G#8','A8','A#8','B8']
 
 
-def observe(x=None, N=None, hop=None, M=None, Q=None, L=None, R=None, fs=None, do_print=defaults.DO_PRINT):
+def observe(x=None, N=None, hop=None, M=None, Q=None, L=None, R=None, fs=None):
     if N is None:
         if M is None:
             N = defaults.N
@@ -41,7 +41,7 @@ def observe(x=None, N=None, hop=None, M=None, Q=None, L=None, R=None, fs=None, d
     R = R + (R - 1) % 2  # make odd so one bin can be exactly ratio = 0
     p = dict()
     p['R'] = R  # in case R becomes odd
-    freqs, freqs_der, X, x_bufs = ddm.stddm(x, Q=Q, L=L, N=N, M=M, fs=fs, hop=hop, do_print=do_print)
+    freqs, freqs_der, X, x_bufs = ddm.stddm(x, Q=Q, L=L, N=N, M=M, fs=fs, hop=hop)
     p['ft'] = normalize(numpy.abs(X))
     p['good_rats'] = get_good_rats(p_ft=p['ft'], L=L, fs=fs, N=N, freqs=freqs, freqs_der=freqs_der)
     ratios = freqs_der/freqs
@@ -63,11 +63,6 @@ def observe(x=None, N=None, hop=None, M=None, Q=None, L=None, R=None, fs=None, d
     return p
 
 
-def seps_observe(seps, N=None, hop=None, M=None):
-    """p_ft of pre-mixed sources for supervised nmf"""
-    return [normalize(numpy.abs(ec_stft(seps[:, i], N=N, hop=hop, M=M)[0])) for i in xrange(seps.shape[1])]
-
-
 def load_sound(sound_fn=None, fs_expected=defaults.FS):
     fs, data = scipy.io.wavfile.read(sound_fn)
     if numpy.issubdtype(data.dtype, float):
@@ -77,7 +72,7 @@ def load_sound(sound_fn=None, fs_expected=defaults.FS):
         data = data.astype(numpy.float_) / max_val
     else:
         raise Exception('non-int, non-float .wav file')
-    # todo proper resampling if fs != fs_expected
+    # todo: proper resampling if fs != fs_expected
     return fs, data
 
 
@@ -149,10 +144,6 @@ def ec_istft(X=None, M=None, hop=None):
 
 def normalize(x, axis=None):
     return x / (numpy.sum(x, axis, keepdims=True) + numpy.spacing(1))
-
-
-def normalize_and_output(x, out, axis=None):
-    numpy.divide(x, numpy.sum(x, axis, keepdims=True) + numpy.spacing(1), out=out)
 
 
 def get_good_rats(p_ft=None, L=None, fs=None, N=None, freqs=None, freqs_der=None):
@@ -250,12 +241,6 @@ def get_note_name(freq):
         return ALL_NOTES[note_idx]
     except Exception:
         raise Exception
-
-
-def KL(A, B):
-    Atemp = A / sum(A)
-    Btemp = B / sum(B)
-    return sum(Atemp * numpy.log(Atemp / Btemp + numpy.spacing(1)))
 
 
 def center_of_energy(x):

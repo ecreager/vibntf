@@ -66,7 +66,6 @@ class Separation(object):
         pass
 
     def set_defaults(self):
-        self.do_print = defaults.DO_PRINT
         self.save_observations = defaults.SAVE_OBS
         self.q_init = None
         self.do_write = defaults.DO_WRITE
@@ -208,11 +207,10 @@ class VibNtfAnalysis(Separation):
             self.mix += noise
         self.X, _  = util.ec_stft(x=self.mix, N=self.N, hop=self.hop)
         if pobs is None:
-            self.pobs = util.observe(x=self.mix, N=self.N, M=self.M, Q=self.Q, L=self.L, hop=self.hop, fs=self.fs, R=self.R, do_print=self.do_print)
+            self.pobs = util.observe(x=self.mix, N=self.N, M=self.M, Q=self.Q, L=self.L, hop=self.hop, fs=self.fs, R=self.R)
         else:
             self.pobs = pobs
         self.R = self.pobs['R']  # in case R becomes odd
-        self.p_ftr = ntf.dense_pftr(self.pobs)
         if self.do_write:  # write audio in
             for s in xrange(self.S):
                 util.save_sound(sound_fn=self.info['in_dir'] + '/in' + str(s) + '.wav', sound=self.refs[:, s], fs=self.fs)
@@ -220,11 +218,12 @@ class VibNtfAnalysis(Separation):
 
     def separate(self, q_init=None):
         if q_init is None:
-            F, T, R = self.p_ftr.shape
+            F, T = self.pobs['ft'].shape
+            R = self.R
             self.q_init = ntf.init_ntf(F, T, R, self.Z, self.S)
         else:
             self.q_init = q_init
-        self.q, self.gain, self.all_gains = ntf.fm_ntf(self.pobs, S=self.S, Z=self.Z, em_iterations=self.em_iterations, store_gains=defaults.STORE_GAINS, good_rats=self.pobs['good_rats'], q_init=self.q_init)
+        self.q = ntf.fm_ntf(self.pobs, S=self.S, Z=self.Z, em_iterations=self.em_iterations, good_rats=self.pobs['good_rats'], q_init=self.q_init)
 
     def recon(self):
         self.mask = ntf.get_mask(self.q)
@@ -256,11 +255,12 @@ class VibNtfSeparation(Separation):
 
     def separate(self, q_init=None):
         if q_init is None:
-            F, T, R = self.p_ftr.shape
+            F, T = self.pobs['ft'].shape
+            R = self.R
             self.q_init = ntf.init_ntf(F, T, R, self.Z, self.S)
         else:
             self.q_init = q_init
-        self.q, self.gain, self.all_gains = ntf.fm_ntf(self.pobs, S=self.S, Z=self.Z, em_iterations=self.em_iterations, store_gains=defaults.STORE_GAINS, good_rats=self.pobs['good_rats'], q_init=self.q_init)
+        self.q = ntf.fm_ntf(self.pobs, S=self.S, Z=self.Z, em_iterations=self.em_iterations, good_rats=self.pobs['good_rats'], q_init=self.q_init)
 
     def observe(self, pobs=None):
         if self.design.files:
@@ -274,11 +274,10 @@ class VibNtfSeparation(Separation):
             self.mix = numpy.sum(self.refs, axis=1)
         self.X, _  = util.ec_stft(x=self.mix, N=self.N, hop=self.hop)
         if pobs is None:
-            self.pobs = util.observe(x=self.mix, N=self.N, M=self.M, Q=self.Q, L=self.L, hop=self.hop, fs=self.fs, R=self.R, do_print=self.do_print)
+            self.pobs = util.observe(x=self.mix, N=self.N, M=self.M, Q=self.Q, L=self.L, hop=self.hop, fs=self.fs, R=self.R)
         else:
             self.pobs = pobs
         self.R = self.pobs['R']  # in case R becomes odd
-        self.p_ftr = ntf.dense_pftr(self.pobs)
         if self.do_write: # write audio in
             for s in xrange(self.S):
                 util.save_sound(sound_fn=self.info['in_dir'] + '/in' + str(s) + '.wav', sound=self.refs[:, s], fs=self.fs)
@@ -295,8 +294,6 @@ class VibNtfSeparation(Separation):
         fn_txt = self.info['bss_dir'] + '/bss.txt'
         f = open(fn_txt, 'a+')
         self.eval_txt = 'alg VibNTF\n fn1 %s\n fn2 %s\n snr %s\n fm_ntf bss_eval results\n sdr %s \n sir %s\n sar %s' % (self.design.fn1, self.design.fn2, self.design.snr, self.bss['sdr'], self.bss['sir'], self.bss['sar'])
-        if self.do_print:
-            print self.eval_txt
         f.write(self.eval_txt)
         f.close()
 
@@ -361,8 +358,6 @@ class NmfSeparation(Separation):
         fn_txt = self.info['bss_dir'] + '/bss.txt'
         f = open(fn_txt, 'a+')
         self.eval_txt = 'alg NMF\n fn1 %s\n fn2 %s\n snr %s\n fm_ntf bss_eval results\n sdr %s \n sir %s\n sar %s' % (self.design.fn1, self.design.fn2, self.design.snr, self.bss['sdr'], self.bss['sir'], self.bss['sar'])
-        if self.do_print:
-            print self.eval_txt
         f.write(self.eval_txt)
         f.close()
 
@@ -430,7 +425,6 @@ class CompareSeparation(object):
     def __init__(self, es):
         self.experiments = es
         self.name = 'compare'
-        self.do_print = es[0].do_print
         for e in self.experiments:
             self.name += '_' + e.alg_name
         for e in self.experiments:
@@ -451,9 +445,6 @@ class CompareSeparation(object):
         for e in self.experiments:
             self.compare_results += '==========================\n' + e.eval_txt
         f = open(fn_txt, 'a+')
-        if self.do_print:
-            print '~ compare results ~'
-            print self.compare_results
         f.write(self.compare_results)
         f.close()
 
@@ -485,10 +476,11 @@ class VibNtfSeparationNmfInit(VibNtfSeparation):
         self.nmf_experiment.remove_dirs()
 
     def separate(self):
-        self.q, self.gain, self.all_gains = ntf.fm_ntf(self.pobs, S=self.S, Z=self.Z, em_iterations=self.em_iterations, store_gains=defaults.STORE_GAINS, good_rats=self.pobs['good_rats'], q_init=self.q_init)
+        self.q = ntf.fm_ntf(self.pobs, S=self.S, Z=self.Z, em_iterations=self.em_iterations, good_rats=self.pobs['good_rats'], q_init=self.q_init)
 
     def init_factors(self):
-        F, T, R = self.p_ftr.shape
+        F, T = self.pobs['ft'].shape
+        R = self.R
         self.q_init = ntf.init_ntf(F, T, R, self.Z, self.S)
         for s in xrange(self.S): # copy nmf factors as ntf init
             for z in xrange(self.Z):

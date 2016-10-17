@@ -11,7 +11,7 @@ def hannd(M):
     return wd
 
 
-def stddm(x, Q=None, L=None, N=None, M=None, fs=None, hop=None, do_print=defaults.DO_PRINT):
+def stddm(x, Q=None, L=None, N=None, M=None, fs=None, hop=None):
     if N is None:
         if M is None:
             N = defaults.N
