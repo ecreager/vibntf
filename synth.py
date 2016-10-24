@@ -26,7 +26,7 @@ def chirp(f_start=None, f_end=None, sig_len=None, fs=defaults.FS, phase_init=def
     freq_law = numpy.linspace(f_start, f_end, num=sig_len)
     phase = numpy.zeros((sig_len, ))
     phase[0] = phase_init
-    for n in xrange(1, int(sig_len)):
+    for n in range(1, int(sig_len)):
         phase[n] = phase[n-1] + freq_law[n-1]*2*numpy.pi/fs
     return numpy.cos(phase)
 

@@ -22,13 +22,13 @@ def stddm(x, Q=None, L=None, N=None, M=None, fs=None, hop=None):
         if M is None:
             M = N
     if hop is None:
-        hop = M/4
+        hop = M//4
     w = numpy.hanning(M)
     wd = hannd(M)
     X, x_bufs = util.ec_stft(x, N=N, hop=hop, M=M)
     F, T = X.shape
-    pad1 = (M + 1) / 2
-    pad2 = M / 2
+    pad1 = (M + 1)//2
+    pad2 = M//2
     xpad = numpy.hstack((numpy.zeros(pad1, ), x, numpy.zeros(pad2, )))
     wpad = numpy.zeros_like(xpad)
     inds = pad1 + hop * (1 + numpy.arange(T))
@@ -46,13 +46,13 @@ def stddm(x, Q=None, L=None, N=None, M=None, fs=None, hop=None):
                           fs * binFreqs[None, :] *
                           numpy.fft.fft((x_bufs * w[None, :]), n=N, axis=1))[:, :, None]
     for t, ind in enumerate(inds):
-        for f in xrange(F):
+        for f in range(F):
             if False:
-                bottomBin = int(numpy.floor(f - (L - 1) / 2.))
-                topBin = int(numpy.floor(f + (L - 1) / 2.))
+                bottomBin = (f - (L - 1)) // 2
+                topBin = (f + (L - 1)) // 2
                 nhdBins = numpy.arange(bottomBin, topBin + 1)
-            Aft[f, t, :, :] = sigPolyWinFfts[t, xrange(f - 1 - (L - 1) / 2, f + (L - 1) / 2), :]
-            bft[f, t, :, :] = sigWinDInnerProds[t, xrange(f - 1 - (L - 1) / 2, f + (L - 1) / 2), :]
+            Aft[f, t, :, :] = sigPolyWinFfts[t, range(f - 1 - (L - 1) // 2, f + (L - 1) // 2), :]
+            bft[f, t, :, :] = sigWinDInnerProds[t, range(f - 1 - (L - 1) // 2, f + (L - 1) // 2), :]
     AHft = numpy.transpose(Aft, axes=(0, 1, 3, 2)).conj()
     AHAinv = fast2x2inv(numpy.sum(Aft[:, :, None, :, :] * AHft[:, :, :, :, None], axis=3))
     AHb = numpy.sum(AHft[:, :, :, :, None] * bft[:, :, None, :, :], axis=3)

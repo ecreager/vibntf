@@ -57,8 +57,8 @@ def observe(x=None, N=None, hop=None, M=None, Q=None, L=None, R=None, fs=None):
         ratios = ratios*p['good_rats']
     p['r'] = numpy.reshape(numpy.digitize(ratios.flatten(), ratio_bins) -1, p['ft'].shape)
     p['ftr'] = numpy.zeros(p['r'].shape + (R, ))
-    for f in xrange(p['r'].shape[0]):
-        for t in xrange(p['r'].shape[1]):
+    for f in range(p['r'].shape[0]):
+        for t in range(p['r'].shape[1]):
             p['ftr'][f, t, p['r'][f, t]] = p['ft'][f, t]
     return p
 
@@ -94,25 +94,25 @@ def ec_stft(x=None, N=None, hop=None, M=None):
         if M is None:
             M = N
     if hop is None:
-        hop = N/4
+        hop = N//4
     window = numpy.hanning(M)
     x = numpy.squeeze(x)
     window = numpy.squeeze(window)
     M = window.shape[0]
-    hM1 = (M+1)/2
-    hM2 = M/2
+    hM1 = (M+1)//2
+    hM2 = M//2
     pad1 = M - hop
     pad2 = M - hop
     xpad = numpy.hstack((numpy.zeros(pad1, ), x, numpy.zeros(pad2, )))
     wpad = numpy.zeros_like(xpad)
-    nHops = int(numpy.floor((len(xpad) - M - 0.)/hop))
-    X = numpy.zeros((N/2+1, nHops), dtype=numpy.complex_)
+    nHops = (len(xpad) - M)//hop
+    X = numpy.zeros((N//2+1, nHops), dtype=numpy.complex_)
     x_bufs = numpy.zeros((M, nHops))
     hs = numpy.arange(1, nHops+1)
     inds = hM1 + hop*hs
     for h, ind in zip(hs, inds):
         wpad[ind-hM1:ind+hM2] += window
-        X[:, h-1] = numpy.fft.fft(window * xpad[ind-hM1:ind+hM2], n=N)[:N/2+1]
+        X[:, h-1] = numpy.fft.fft(window * xpad[ind-hM1:ind+hM2], n=N)[:N//2+1]
         x_bufs[:, h-1] = xpad[ind-hM1:ind+hM2]
     else:
         wolmax = numpy.max(wpad)*(N/2+1)/N
@@ -124,8 +124,8 @@ def ec_istft(X=None, M=None, hop=None):
     nBins, nHops = X.shape
     if M is None:
         M = 2*(nBins-1)
-    hM1 = (M+1)/2
-    hM2 = M/2
+    hM1 = (M+1)//2
+    hM2 = M//2
     pad1 = M - hop
     pad2 = M - hop
     xpad = numpy.hstack((numpy.zeros(pad1, ), numpy.zeros(nHops*hop, ), numpy.zeros(pad2, )))
@@ -176,7 +176,7 @@ def apply_screen(X=None, screen=None):
 
 def center_and_segment(s, desired_length_samps):
     s_center = center_of_energy(s)
-    half_desired_length_samps = desired_length_samps/2
+    half_desired_length_samps = desired_length_samps//2
     s_left_half_cropped = s[max(0, s_center-half_desired_length_samps):s_center]
     s_right_half_cropped = s[s_center:s_center+half_desired_length_samps]
     left_pad = numpy.zeros((max(0, half_desired_length_samps - len(s_left_half_cropped))), )

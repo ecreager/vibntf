@@ -9,7 +9,7 @@ import ntf
 import synth
 import util
 import defaults
-import cPickle as pickle
+import pickle
 
 __author__ = 'ecreager'
 
@@ -68,7 +68,7 @@ class Separation(object):
     def set_defaults(self):
         self.save_observations = defaults.SAVE_OBS
         self.q_init = None
-        self.do_write = defaults.DO_WRITE
+        self.do_write = defaults.SAVE_AUDIO
         self.fs = defaults.FS
         self.S = defaults.S
         self.Z = defaults.Z
@@ -163,6 +163,7 @@ class Separation(object):
         scipy.io.savemat(self.design.obs_fn, self.pobs)
         self.design.init_fn = self.info['in_dir'] + '/q_init.mat'
         scipy.io.savemat(self.design.init_fn, self.q_init)
+        print('\nsaving observations and q_init at %s' % self.info['in_dir'])
         pickle.dump(self.design, open(self.design_fn, 'wb'))
 
     def load_obs(self):
@@ -212,7 +213,8 @@ class VibNtfAnalysis(Separation):
             self.pobs = pobs
         self.R = self.pobs['R']  # in case R becomes odd
         if self.do_write:  # write audio in
-            for s in xrange(self.S):
+            print('\nsaving input mixture at %s' % self.info['in_dir'])
+            for s in range(self.S):
                 util.save_sound(sound_fn=self.info['in_dir'] + '/in' + str(s) + '.wav', sound=self.refs[:, s], fs=self.fs)
             util.save_sound(sound_fn=self.info['in_dir'] + '/mix.wav', sound=self.mix, fs=self.fs)
 
@@ -279,7 +281,8 @@ class VibNtfSeparation(Separation):
             self.pobs = pobs
         self.R = self.pobs['R']  # in case R becomes odd
         if self.do_write: # write audio in
-            for s in xrange(self.S):
+            print('\nsaving experiment design and q_init at %s' % self.info['in_dir'])
+            for s in range(self.S):
                 util.save_sound(sound_fn=self.info['in_dir'] + '/in' + str(s) + '.wav', sound=self.refs[:, s], fs=self.fs)
             util.save_sound(sound_fn=self.info['in_dir'] + '/mix.wav', sound=self.mix, fs=self.fs)
 
@@ -342,7 +345,7 @@ class NmfSeparation(Separation):
         else:
             self.pobs = pobs
         if self.do_write: # write audio in
-            for s in xrange(self.S):
+            for s in range(self.S):
                 util.save_sound(sound_fn=self.info['in_dir'] + '/in' + str(s) + '.wav', sound=self.refs[:, s], fs=self.fs)
             util.save_sound(sound_fn=self.info['in_dir'] + '/mix.wav', sound=self.mix, fs=self.fs)
 
@@ -401,7 +404,7 @@ class NmfAnalysis(Separation):
         else:
             self.pobs = pobs
         if self.do_write: # write audio in
-            for s in xrange(self.S):
+            for s in range(self.S):
                 util.save_sound(sound_fn=self.info['in_dir'] + '/in' + str(s) + '.wav', sound=self.refs[:, s], fs=self.fs)
             util.save_sound(sound_fn=self.info['in_dir'] + '/mix.wav', sound=self.mix, fs=self.fs)
 
@@ -447,6 +450,7 @@ class CompareSeparation(object):
         f = open(fn_txt, 'a+')
         f.write(self.compare_results)
         f.close()
+        print('\nwriting comparison results in %s' % self.experiments[0].info['bss_dir'])
 
     def __unicode__(self):
         return self.name
@@ -482,8 +486,8 @@ class VibNtfSeparationNmfInit(VibNtfSeparation):
         F, T = self.pobs['ft'].shape
         R = self.R
         self.q_init = ntf.init_ntf(F, T, R, self.Z, self.S)
-        for s in xrange(self.S): # copy nmf factors as ntf init
-            for z in xrange(self.Z):
+        for s in range(self.S): # copy nmf factors as ntf init
+            for z in range(self.Z):
                 self.q_init['f|sz'][:, s, z] = self.nmf_experiment.q['f|z'][:, s]
 
 
@@ -505,18 +509,16 @@ class Experiment(object):
 
     def run_experiment(self):
         self.setup()
-        for n in xrange(self.n_separations):
-            print '\nexperiment %i/%i\n' % (n+1, self.n_separations)
+        for n in range(self.n_separations):
+            print('\nexperiment %i/%i\n' % (n+1, self.n_separations))
             d = self.make_design()
             vibntf = VibNtfSeparation(d)
             nmf = NmfSeparation(d)
             es = [vibntf, nmf]
-            for e in es:
-                e.do_print = False
-                e.save_observations = False
-                e.do_write = False
+            # for e in es:
+            #     e.save_observations = False
+            #     e.do_write = False
             compare = CompareSeparation([vibntf, nmf])
-            compare.save = False
             compare.run_compare()
             self.update_results(compare)
         self.save_results()
@@ -541,8 +543,7 @@ class Experiment(object):
         f = open(self.latex_fn, 'a+')
         f.write(self.latex_table)
         f.close()
-        print
-        print 'results at ' + self.results_fn
+        print('\nresults at ' + self.results_fn)
 
     @staticmethod
     def text_format_alg_results(alg, mr):

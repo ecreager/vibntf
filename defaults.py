@@ -4,7 +4,7 @@ __author__ = 'ecreager'
 
 # stft
 N = 1024
-HOP = N/4
+HOP = N//4
 
 # ddm
 Q = 2
@@ -15,10 +15,9 @@ R = 50
 S = 2
 Z = 3
 EM_ITER = 100
-# EM_ITER = 10
 
 # synth
-FS = 44100. # music
+FS = 44100 # music
 SIG_DUR = 2.0 # seconds
 F0 = 220.
 RATE = 10.
@@ -39,13 +38,14 @@ MIX_DUR = SIG_DUR  # seconds
 MIX_SNR = 0.
 DO_NOISE = True  # adding a bit of noise to the mixture signal helps with DDM stability
 NOISING_SNR = 60
-DO_WRITE = True
+SAVE_AUDIO = True  # write audio ins/outs to disk
 SCREEN = True  # apply heuristic threshold to noisy DDM estimates
 P_FT_POWERED_PCNT = 10  # heuristic thresholding: lower bound
 ABS_RATIOS_PCNT = 100  # heuristic thresholding: upper bound
-SAVE_OBS = True
-EVAL_NMF_INIT = True  # for VibNTF with NMF initialization, also evaluate the initialization as a separator
-SAVE_COMPARE = True
+SAVE_OBS = True  # save pobs(f,t,r) and q_init to disk
+SAVE_COMPARE = True  # save comparison between, e.g., nmf and vibntf
 ALGS = ['nmf', 'vibntf']  # default comparison in a synthetic data experiment
 N_SEPARATIONS = 1
 VIBNTF_DIR = '/tmp/vibntf'  # where to store data
+
+EVAL_NMF_INIT = True  # for VibNTF with NMF initialization, also evaluate the initialization as a separator
